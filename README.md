@@ -10,7 +10,7 @@ Use the Go version declared in [`go.mod`](go.mod) to build from the repository r
 just go_build
 ```
 
-Or download the binary for your OS and architecture from [Releases](https://github.com/patrickap/wrap/releases) and install it in a directory on your `PATH`:
+Or download the binary for your OS and architecture from `Releases` and install it in a directory on your `PATH`:
 
 ```sh
 sudo install -m 755 wrap /usr/local/bin/wrap
