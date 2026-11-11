@@ -24,6 +24,16 @@ func TestRootCommandDebugOutput(t *testing.T) {
 			want: "tool --format=wide -v --count=2 --empty= --items=one --items=2 --items --ratio=1.5 --text=two words --true-flag --zero=0 deploy --after --force target --literal=value --suffix=last\n",
 		},
 		{
+			name: "deeper nested command",
+			args: []string{"tool", "deploy", "release", "archive.tar"},
+			want: "tool --format=wide -v --count=2 --empty= --items=one --items=2 --items --ratio=1.5 --text=two words --true-flag --zero=0 deploy --after --force release --stable archive.tar\n",
+		},
+		{
+			name: "root args suffix",
+			args: []string{"rootargs", "one", "two"},
+			want: "rootargs --before one two --suffix=root\n",
+		},
+		{
 			name: "unmatched command passes remaining arguments through",
 			args: []string{"passthrough", "unknown", "deploy", "--literal"},
 			want: "passthrough --before unknown deploy --literal\n",

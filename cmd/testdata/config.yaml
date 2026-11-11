@@ -17,8 +17,15 @@ tool:
     force: true
     $args:
       suffix: last
+    release:
+      stable: true
 
 passthrough:
   before: true
   deploy:
     after: true
+
+rootargs:
+  before: true
+  $args:
+    suffix: root
