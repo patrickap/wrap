@@ -1,12 +1,19 @@
 tool:
   --format: wide
   -v: true
-  count: 2
+  CAPITAL: true
+  under_score: true
+  (special): true
+  count: 1
   empty: ""
   empty-list: []
+  string-list: "[]"
+  nested-list: [[]]
   empty-map: {}
+  string-map: "{}"
+  nested-map: [{}]
   false-flag: false
-  items: [one, 2, true]
+  items: [[], {}, "", null, false, true, 2, three]
   nil-value: null
   ratio: 1.5
   text: "two words"

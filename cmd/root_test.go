@@ -8,6 +8,7 @@ import (
 
 func TestRootCommandDebugOutput(t *testing.T) {
 	configPath := filepath.Join("testdata", "config.yaml")
+	toolFlags := "--(special) --format=wide -v --CAPITAL --count=1 --empty= --items= --items --items=2 --items=three --ratio=1.5 --string-list=[] --string-map={} --text=two words --true-flag --under_score --zero=0"
 	tests := []struct {
 		name string
 		args []string
@@ -16,17 +17,17 @@ func TestRootCommandDebugOutput(t *testing.T) {
 		{
 			name: "flag types and prefixes",
 			args: []string{"tool"},
-			want: "tool --format=wide -v --count=2 --empty= --items=one --items=2 --items --ratio=1.5 --text=two words --true-flag --zero=0\n",
+			want: "tool " + toolFlags + "\n",
 		},
 		{
 			name: "nested flags and args suffix",
 			args: []string{"tool", "deploy", "target", "--literal=value"},
-			want: "tool --format=wide -v --count=2 --empty= --items=one --items=2 --items --ratio=1.5 --text=two words --true-flag --zero=0 deploy --after --force target --literal=value --suffix=last\n",
+			want: "tool " + toolFlags + " deploy --after --force target --literal=value --suffix=last\n",
 		},
 		{
 			name: "deeper nested command",
 			args: []string{"tool", "deploy", "release", "archive.tar"},
-			want: "tool --format=wide -v --count=2 --empty= --items=one --items=2 --items --ratio=1.5 --text=two words --true-flag --zero=0 deploy --after --force release --stable archive.tar\n",
+			want: "tool " + toolFlags + " deploy --after --force release --stable archive.tar\n",
 		},
 		{
 			name: "root args suffix",
