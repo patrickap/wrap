@@ -1,27 +1,25 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"os"
-	"os/signal"
-	"syscall"
+	"os/exec"
 
-	"github.com/patrickap/runr/m/v2/cmd"
-	"github.com/patrickap/runr/m/v2/internal/lock"
+	"github.com/patrickap/wrap/cmd"
 )
 
 func main() {
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
-
-	go func() {
-		<-signals
-		lock.Unlock()
-		os.Exit(1)
-	}()
-
 	err := cmd.Execute()
+
 	if err != nil {
-		lock.Unlock()
+		var exitError *exec.ExitError
+
+		if errors.As(err, &exitError) {
+			os.Exit(exitError.ExitCode())
+		}
+
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }

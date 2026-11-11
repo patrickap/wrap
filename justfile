@@ -1,4 +1,4 @@
-PROJECT_NAME := "patrickap/runr"
+PROJECT_NAME := "patrickap/wrap"
 PROJECT_VERSION := "VERSION"
 
 [private]
@@ -20,10 +20,10 @@ restore_version:
 [private]
 go_build:
   @go mod download
-  @GOOS=darwin GOARCH=amd64 go build -ldflags "-X 'github.com/patrickap/runr/m/v2/cmd.version=v$(just get_version)'" -o ./build/darwin-amd64/runr
-  @GOOS=darwin GOARCH=arm64 go build -ldflags "-X 'github.com/patrickap/runr/m/v2/cmd.version=v$(just get_version)'" -o ./build/darwin-arm64/runr
-  @GOOS=linux GOARCH=amd64 go build -ldflags "-X 'github.com/patrickap/runr/m/v2/cmd.version=v$(just get_version)'" -o ./build/linux-amd64/runr
-  @GOOS=linux GOARCH=arm64 go build -ldflags "-X 'github.com/patrickap/runr/m/v2/cmd.version=v$(just get_version)'" -o ./build/linux-arm64/runr
+  @GOOS=darwin GOARCH=amd64 go build -o ./build/darwin-amd64/wrap
+  @GOOS=darwin GOARCH=arm64 go build -o ./build/darwin-arm64/wrap
+  @GOOS=linux GOARCH=amd64 go build -o ./build/linux-amd64/wrap
+  @GOOS=linux GOARCH=arm64 go build -o ./build/linux-arm64/wrap
 
 [private]
 git_publish:

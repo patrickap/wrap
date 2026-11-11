@@ -1,0 +1,24 @@
+tool:
+  --format: wide
+  -v: true
+  count: 2
+  empty: ""
+  empty-list: []
+  empty-map: {}
+  false-flag: false
+  items: [one, 2, true]
+  nil-value: null
+  ratio: 1.5
+  text: "two words"
+  true-flag: true
+  zero: 0
+  deploy:
+    after: true
+    force: true
+    $args:
+      suffix: last
+
+passthrough:
+  before: true
+  deploy:
+    after: true

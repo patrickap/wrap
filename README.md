@@ -1,111 +1,88 @@
-# runr
+# wrap
 
-Runr is a lightweight command runner developed in Go, designed for simplicity and efficiency. It can be easily configured using `yaml` files, making it a flexible tool for automating and managing command execution.
+`wrap` runs existing command-line programs with defaults defined in YAML. It is a lightweight argument wrapper, not a task runner or alias manager. It starts programs directly without invoking a shell.
 
 ## Installation
 
-[Download](./build) the executable of Runr and add it to the `$PATH` variable or manually move it to `/usr/local/bin/runr`.
+Use the Go version declared in [`go.mod`](go.mod). Build the executable from the repository root:
+
+```sh
+go build -o wrap .
+```
 
 ## Usage
 
-Create a `runr.yaml` configuration file, which Runr will automatically search for in the current working directory. Alternatively, you can set the `RUNR_CONFIG_DIR` environment variable to specify a different directory. To ensure Runr operates correctly, at least one command must be defined in the configuration file. The first entry in the command list must be an executable. Once configured, you can execute commands by running `runr <command-name>`.
+```text
+wrap [-c config.yaml] [-d] <program> [command path] [arguments...]
+```
 
-## Configuration Reference
+Examples:
 
-```yml
-# Anchors are constructs that can be reused throughout the config.
-# It's not related to Runr.
-default_options: &default_options
-  request: "GET"
-  header: "Content-Type: text/html"
+```sh
+wrap docker compose up
+wrap -c ./production.yaml kubectl get pods
+wrap git log --oneline
+wrap -d docker compose up
+```
 
-commands:
-  # Specify the command name which can be run using the Runr CLI.
-  # This command config is equivalent to:
-  # curl https://google.com --request "GET" --header "Content-Type: text/html" --header "Cache-Control: no-cache" --header "sessionId=3f2a9b10a8c749e78c6f1a234567d890" --verbose
-  request:
-    # Specify the command to run. Alternative syntax:
-    # command:
-    #   - curl
-    #   - https://google.com
-    command: ["curl", "https://google.com"]
-    options:
-      # Options maps directly to command line options.
-      # Can be either of type boolean, string, integer, or list for adding multiple.
-      # Anchor aliases can easily be used to reuse common options.
-      <<: *default_options
-      # Every option can be specified with prefix if needed.
-      # Defaults to "--" (e.g. --verbose). Alternative syntax:
-      # --verbose: true
-      # -verbose: true
+Wrapper options must appear before the program name. `-c` or `--config` selects a configuration file; without it, `./config.yaml` is used. A missing or unreadable configuration file is an error. `-d` or `--debug` prints the resolved command without running it.
+
+Arguments after the program are passed to the target as separate arguments. `wrap` does not use a shell, so spaces and special characters are not interpreted by a shell.
+
+## Configuration
+
+See [`examples/config.yaml`](examples/config.yaml) for a complete example:
+
+```yaml
+docker:
+  debug: true
+  compose:
+    up:
+      detach: true
+      build: true
+      force-recreate: true
+        
+kubectl:
+  get:
+    pods:
+      all-namespaces: true
+      output: wide
+
+cp:
+  $args:
+    archive: true
+    verbose: true
+```
+
+Objects represent command levels. Values become default flags:
+
+- `true` emits a boolean flag; `false` emits nothing.
+- Strings and numbers emit `--name=value`.
+- Arrays emit one flag per item using the same value rules: strings and numbers emit `--name=value`, `true` emits `--name`, and `false` emits nothing.
+
+Flag keys control their prefix. A key without a prefix receives `--`; an existing prefix is preserved. For example, `verbose: true` emits `--verbose`, `"-v": true` emits `-v`, and `"--output": wide` emits `--output=wide`.
+
+Use the reserved `$args` key to pass through all remaining arguments before adding its nested defaults:
+
+```yaml
+restic:
+  backup:
+    $args:
       verbose: true
-      # Multiple options of the same type can be added using a list.
-      header:
-        - "Cache-Control: no-cache"
-        - "sessionId=3f2a9b10a8c749e78c6f1a234567d890"
-    hooks:
-      # Runs before. Alternative syntax:
-      # pre:
-      #   - echo
-      #   - "Running pre hook..."
-      pre: ["echo", "Running pre hook..."]
-      # Runs after. Alternative syntax:
-      # post:
-      #   - /bin/sh
-      #   - -c
-      #   - |
-      #     echo 'Running post hook...'
-      post: ["/bin/sh", "-c", "echo 'Running post hook...'"]
-      # Runs only on success. Hooks can also be used to run other Runr commands.
-      success: ["/bin/sh", "-c", "runr <command-name>"]
-      # Runs only on failure.
-      failure: []
 ```
 
-## Advanced Configuration
+With `wrap restic backup data`, the wrapper emits `restic --repo=... backup data --verbose`. `$args` preserves every remaining argument, including flags and positionals, before adding its nested defaults.
 
-It’s also possible to execute complex shell commands that require interpretation by a specific shell like `/bin/sh -c`.
+## Command Resolution
 
-```yml
-commands:
-  id:
-    command: ["/bin/sh", "-c", "echo $(id)"]
+The command path must immediately follow the program name. `wrap` follows leading arguments only while each one matches a configured command object. At each matched level, it inserts that level's defaults before the next command or remaining arguments. Once an argument does not match a configured command, the rest are passed through unchanged and are not inspected as commands.
+
+For example, `wrap docker compose up --detach` resolves the configured `docker`, `compose`, and `up` levels, then passes `--detach` through to Docker. Explicit flags are not parsed or deduplicated, so configured defaults and user-provided arguments may contain identical flags. The target program determines how repeated flags are handled.
+
+## Development
+
+Run the test suite from the repository root:
+
+```sh
+go test ./...
 ```
-
-It's also possible to change the position of the applied command options. By default, they get added at the end of the command automatically. To change it, run the command in a new shell process and access them using the special variable `$@`. Use `--` to signal the end of options for the `/bin/sh` command. Any arguments after `--` will be treated as positional parameters or arguments for the command string executed by `/bin/sh -c`. Try it in the terminal:
-
-```bash
-/bin/sh -c 'echo ${@}' -- --option-1 --option-2 --option-3
-```
-
-In the example below, during execution `${@}` gets replaced with the actual options.
-
-```yml
-commands:
-  hello-world:
-    command: ["/bin/sh", "-c", "echo ${@}; echo 'world!'", "--"]
-    options:
-      hello: true
-```
-
-To run commands repeatedly or group commands to a workflow, hooks are suitable:
-
-```yml
-commands:
-  hello-world:
-    command: ["/bin/sh", "-c", "echo 'hello world!'"]
-    hooks:
-      post:
-        - /bin/sh
-        - -c
-        - |
-          runr command-1
-          runr command-2
-          runr command-3
-```
-
-**Important:** Please note that invoking `runr` within the command property itself is not feasible. This is due to the fact that the primary command obtains an exclusive lock, thereby preventing concurrent execution of other `runr` commands.
-
-## Contribution
-
-Runr is developed in Go. To build the binary, execute `just go-build`, which will generate the binary at `./build/runr`. To publish a new version, use `just release <patch|minor|major>`. This command will automatically increment the version according to semantic versioning.
