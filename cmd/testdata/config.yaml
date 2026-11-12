@@ -1,38 +1,52 @@
-tool:
-  --format: wide
-  -v: true
-  CAPITAL: true
-  under_score: true
-  (special): true
-  count: 1
-  empty: ""
-  empty-list: []
-  string-list: "[]"
-  nested-list: [[]]
-  empty-map: {}
-  string-map: "{}"
-  nested-map: [{}]
-  false-flag: false
-  items: [[], {}, "", null, false, true, 2, three]
-  nil-value: null
-  ratio: 1.5
-  text: "two words"
-  true-flag: true
-  zero: 0
-  deploy:
-    after: true
-    force: true
-    $args:
-      suffix: last
-    release:
-      stable: true
+program:
+  # keys
+  --prefix: long
+  -p: short
+  UPPERCASE: true
+  camelCase: true
+  "[special]": true
 
-passthrough:
-  before: true
-  deploy:
-    after: true
+  # values
+  nil: null
+  int-negative: -1
+  int-zero: 0
+  int: 1
+  float: 0.99
+  str-empty: ""
+  str-words: "one two three"
+  str-list: "[]"
+  str-map: "{}"
+  bool-false: false
+  bool-true: true
+  list-empty: []
+  map-empty: {}
 
-rootargs:
-  before: true
+  # nesting
+  nested:
+    - null
+    - -1
+    - 0
+    - 1
+    - 0.99
+    - ""
+    - "one two three"
+    - "[]"
+    - "{}"
+    - false
+    - true
+    - []
+    - {}
+  
+  # arguments
   $args:
-    suffix: root
+    after-args: true
+    subcommand:
+      after-subcommand: true
+  
+  # commands
+  command:
+    after-command: true
+    $args:
+      after-args: true
+    subcommand:
+      after-subcommand: true

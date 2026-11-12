@@ -28,6 +28,9 @@ func build(args []string, config map[string]any) []string {
 	}
 
 	if confChild, ok := config["$args"].(map[string]any); ok {
+		if len(args) == 0 {
+			return flags
+		}
 		result := append(flags, args...)
 		return append(result, resolveFlags(confChild)...)
 	}
