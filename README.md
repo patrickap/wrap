@@ -7,7 +7,7 @@
 Use the Go version declared in [`go.mod`](go.mod) to build from the repository root:
 
 ```sh
-just go_build
+just go-build
 ```
 
 Or download the binary for your OS and architecture from `Releases` and install it in a directory on your `PATH`:
@@ -91,4 +91,4 @@ Explicit arguments are not parsed or deduplicated. If a configured default and a
 
 ## Contribution
 
-`wrap` is developed in Go. To build the binary, execute `just go_build`, which will generate the binary at `./build/wrap`. To publish a new version, use `just release <patch|minor|major>`. This command will automatically increment the version according to semantic versioning.
+`wrap` is developed in Go. To build the binary, execute `just go-build`, which will generate the binary at `./build/wrap`. To publish a new version, use `just release <patch|minor|major>`. This command will automatically increment the version according to semantic versioning.
