@@ -21,18 +21,27 @@ func build(args []string, config map[string]any) []string {
 	flags := resolveFlags(config)
 
 	if len(args) > 0 {
-		if confChild, ok := config[args[0]].(map[string]any); ok {
-			result := append(flags, args[0])
-			return append(result, build(args[1:], confChild)...)
+		conf, ok := config[args[0]].(map[string]any)
+
+		if ok {
+			return append(
+				append(flags, args[0]),
+				build(args[1:], conf)...,
+			)
 		}
 	}
 
-	if confChild, ok := config["$args"].(map[string]any); ok {
+	conf, ok := config["$args"].(map[string]any)
+
+	if ok {
 		if len(args) == 0 {
 			return flags
 		}
-		result := append(flags, args...)
-		return append(result, resolveFlags(confChild)...)
+
+		return append(
+			append(flags, args...),
+			resolveFlags(conf)...,
+		)
 	}
 
 	return append(flags, args...)
@@ -62,9 +71,11 @@ func formatFlags(key string, value any) []string {
 		}
 	case []any:
 		flags := make([]string, 0, len(value))
+
 		for _, item := range value {
 			flags = append(flags, formatFlags(key, item)...)
 		}
+
 		return flags
 	case map[string]any, nil:
 		return nil

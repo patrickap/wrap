@@ -14,8 +14,10 @@ func Run(program string, args []string, stdin io.Reader, stdout, stderr io.Write
 	command.Stdout = stdout
 	command.Stderr = stderr
 
-	if err := command.Run(); err != nil {
-		return fmt.Errorf("run %q: %w", program, err)
+	err := command.Run()
+
+	if err != nil {
+		return fmt.Errorf("run command %q: %w", program, err)
 	}
 
 	return nil

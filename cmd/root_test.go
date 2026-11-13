@@ -7,8 +7,8 @@ import (
 )
 
 func TestRootCommandDebugOutput(t *testing.T) {
-	configPath := filepath.Join("testdata", "config.yaml")
-	programFlags := "--prefix=long -p=short --UPPERCASE --[special] --bool-true --camelCase --float=0.99 --int=1 --int-negative=-1 --int-zero=0 --nested=-1 --nested=0 --nested=1 --nested=0.99 --nested= --nested=one two three --nested=[] --nested={} --nested --str-empty= --str-list=[] --str-map={} --str-words=one two three"
+	configPath := filepath.Join("testdata", "wrap.config.yaml")
+	programFlags := "--prefix=long -p=short --[special] --bool-true --camelcase --float=0.99 --int=1 --int-negative=-1 --int-zero=0 --nested=-1 --nested=0 --nested=1 --nested=0.99 --nested= --nested=one two three --nested=[] --nested={} --nested --str-empty= --str-list=[] --str-map={} --str-words=one two three --uppercase"
 	tests := []struct {
 		name string
 		args []string
@@ -84,11 +84,15 @@ func TestRootCommandDebugOutput(t *testing.T) {
 			root.SetArgs(append([]string{"-c", configPath, "-d"}, test.args...))
 			root.SetOut(&output)
 
-			if err := root.Execute(); err != nil {
+			err := root.Execute()
+
+			if err != nil {
 				t.Fatalf("Execute() error = %v", err)
 			}
 
-			if got := output.String(); got != test.want {
+			got := output.String()
+
+			if got != test.want {
 				t.Fatalf("output = %q, want %q", got, test.want)
 			}
 		})

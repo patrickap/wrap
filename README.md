@@ -1,6 +1,6 @@
 # wrap
 
-`wrap` is a configuration-driven wrapper for command-line programs. It reads its configuration from a `config.yaml` file and adds the defined flags when you run a program. `wrap` is a lightweight wrapper, not a task runner.
+`wrap` is a configuration-driven wrapper for command-line programs. It reads its configuration from a `wrap.config.yaml` file and adds the defined flags when you run a program. `wrap` is a lightweight wrapper, not a task runner.
 
 ## Installation
 
@@ -19,7 +19,7 @@ sudo install -m 755 wrap /usr/local/bin/wrap
 ## Usage
 
 ```sh
-wrap [-c config.yaml] [-d] <program> [command path] [arguments...]
+wrap [-c wrap.config.yaml] [-d] <program> [command path] [arguments...]
 ```
 
 Examples:
@@ -32,7 +32,7 @@ wrap -d curl
 
 Available flags:
 
-- `-c, --config <path>`: Read defaults from this YAML file. Defaults to `./config.yaml` in the current directory.
+- `-c, --config <path>`: Read defaults from this YAML file. Defaults to `./wrap.config.yaml` in the current directory.
 - `-d, --debug`: Print the resolved command without running it.
 - `-h, --help`: Show usage information.
 
