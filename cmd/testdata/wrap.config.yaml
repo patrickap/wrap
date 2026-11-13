@@ -5,6 +5,7 @@ program:
   UPPERCASE: true
   camelCase: true
   "[special]": true
+  "separator=equals": true
 
   # values
   nil: null

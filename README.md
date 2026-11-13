@@ -19,7 +19,7 @@ sudo install -m 755 wrap /usr/local/bin/wrap
 ## Usage
 
 ```sh
-wrap [-c wrap.config.yaml] [-d] <program> [command path] [arguments...]
+wrap [-c wrap.config.yaml] [-v | -d] <program> [arguments...]
 ```
 
 Examples:
@@ -32,9 +32,10 @@ wrap -d curl
 
 Available flags:
 
-- `-c, --config <path>`: Read defaults from this YAML file. Defaults to `./wrap.config.yaml` in the current directory.
-- `-d, --debug`: Print the resolved command without running it.
-- `-h, --help`: Show usage information.
+- `-c, --config <path>`: Sets configuration file path.
+- `-v, --verbose`: Outputs more verbose logs.
+- `-d, --debug`: Prints resolved command without executing.
+- `-h, --help`: Shows usage information.
 
 Everything after the program name is passed to the target as separate arguments.
 
@@ -71,23 +72,37 @@ cp:
     archive: true
     verbose: true
 ```
+### Flag names
 
-Values are rendered as flags:
+Keys that start with a custom prefix like `-` are kept as written. Other keys receive a `--` prefix by default. Values are separated from flags by a space by default.
 
-- `true` emits a flag without a value, such as `--verbose`; `false` emits nothing.
-- Strings and numbers emit `--name=value`. An empty string emits `--name=` with an explicitly empty value.
-- Arrays emit one flag per item. Each item uses the same rules, so `[true, 2, three]` becomes `--items --items=2 --items=three`.
-- `null`, empty arrays, and empty mappings emit no flag.
+To use different separators like `=` instead, include the complete flag and value in the key and set it to `true`:
 
-Keys without a prefix receive `--`; an existing prefix is preserved. For example, `verbose: true` emits `--verbose`, `"-v": true` emits `-v`, `"--output": wide` emits `--output=wide`, and `"-H": value` emits `-H=value`.
+```yaml
+verbose: true                 # --verbose
+-v: true                      # -v
+output: wide                  # --output wide
+-H: value                     # -H value
+"--group-by=paths": true      # --group-by=paths
+```
 
-Nested mappings name subcommands. Flags are added at the level where they are configured: program-level flags appear after the program name and before its subcommand, while subcommand flags appear after that subcommand.
+### Flag values
 
-The first arguments after the program are matched against configured subcommands. Once an argument does not match, it and all remaining arguments pass through unchanged and are not treated as subcommands.
+The YAML value controls what follows a flag:
 
-A configured `$args` mapping adds its flags after those remaining arguments:
+- `true` emits the flag by itself, such as `--verbose`; `false` emits nothing.
+- A non-empty string or number emits the flag and value as separate arguments, such as `--output wide`.
+- An empty string emits the flag followed by an empty argument.
+- An array repeats the flag for each item. For example, `[true, 2, three]` becomes `--items --items 2 --items three`.
+- `null`, an empty array, or an empty mapping emits nothing.
 
-Explicit arguments are not parsed or deduplicated. If a configured default and a user argument repeat a flag, both are passed to the target; the target determines how to handle them.
+### Subcommands and arguments
+
+Nested mappings define subcommands. Flags are added at the level where they are configured: program-level flags come before the subcommand, and subcommand-level flags come after it.
+
+`wrap` matches the leading arguments against configured subcommands. At the first unmatched argument, it stops matching; that argument and everything after it are passed to the program unchanged.
+
+When unmatched arguments are present, a `$args` mapping adds its flags after them. Explicit arguments are not parsed or deduplicated, so repeated flags are passed through and handled by the target program.
 
 ## Contribution
 

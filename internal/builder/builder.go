@@ -80,7 +80,7 @@ func formatFlags(key string, value any) []string {
 	case map[string]any, nil:
 		return nil
 	default:
-		return []string{flag + "=" + fmt.Sprint(value)}
+		return []string{flag, fmt.Sprint(value)}
 	}
 
 	return nil

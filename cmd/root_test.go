@@ -2,13 +2,15 @@ package cmd
 
 import (
 	"bytes"
+	"os"
+	"os/exec"
 	"path/filepath"
 	"testing"
 )
 
 func TestRootCommandDebugOutput(t *testing.T) {
 	configPath := filepath.Join("testdata", "wrap.config.yaml")
-	programFlags := "--prefix=long -p=short --[special] --bool-true --camelcase --float=0.99 --int=1 --int-negative=-1 --int-zero=0 --nested=-1 --nested=0 --nested=1 --nested=0.99 --nested= --nested=one two three --nested=[] --nested={} --nested --str-empty= --str-list=[] --str-map={} --str-words=one two three --uppercase"
+	programFlags := "--prefix long -p short --UPPERCASE --[special] --bool-true --camelCase --float 0.99 --int 1 --int-negative -1 --int-zero 0 --nested -1 --nested 0 --nested 1 --nested 0.99 --nested  --nested one two three --nested [] --nested {} --nested --separator=equals --str-empty  --str-list [] --str-map {} --str-words one two three"
 	tests := []struct {
 		name string
 		args []string
@@ -96,5 +98,34 @@ func TestRootCommandDebugOutput(t *testing.T) {
 				t.Fatalf("output = %q, want %q", got, test.want)
 			}
 		})
+	}
+}
+
+func TestRootCommandLogRunsCommand(t *testing.T) {
+	touch, err := exec.LookPath("touch")
+	if err != nil {
+		t.Skip("touch command is unavailable")
+	}
+
+	targetPath := filepath.Join(t.TempDir(), "command-ran")
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	root := NewRootCommand()
+	root.SetArgs([]string{"-c", filepath.Join("testdata", "wrap.config.yaml"), "--verbose", touch, targetPath})
+	root.SetOut(&stdout)
+	root.SetErr(&stderr)
+
+	if err := root.Execute(); err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+
+	if _, err := os.Stat(targetPath); err != nil {
+		t.Fatalf("target command did not create its file: %v", err)
+	}
+	if got, want := stderr.String(), touch+" "+targetPath+"\n"; got != want {
+		t.Fatalf("log output = %q, want %q", got, want)
+	}
+	if stdout.Len() != 0 {
+		t.Fatalf("stdout = %q, want empty", stdout.String())
 	}
 }

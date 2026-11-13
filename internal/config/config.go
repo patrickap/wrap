@@ -2,15 +2,15 @@ package config
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/viper"
+	"go.yaml.in/yaml/v3"
 )
 
 type Config map[string]any
 
 func Load(path string) (Config, error) {
-	var config Config
-
 	loader := viper.New()
 
 	if path != "" {
@@ -28,11 +28,18 @@ func Load(path string) (Config, error) {
 		return nil, fmt.Errorf("read config file: %w", err)
 	}
 
-	err = loader.Unmarshal(&config)
+	contents, err := os.ReadFile(loader.ConfigFileUsed())
+
+	if err != nil {
+		return nil, fmt.Errorf("read config file: %w", err)
+	}
+
+	config := make(map[string]any)
+	err = yaml.Unmarshal(contents, &config)
 
 	if err != nil {
 		return nil, fmt.Errorf("parse config file: %w", err)
 	}
 
-	return config, nil
+	return Config(config), nil
 }

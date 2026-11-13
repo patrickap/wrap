@@ -12,10 +12,11 @@ import (
 
 func NewRootCommand() *cobra.Command {
 	var configFlag string
+	var verboseFlag bool
 	var debugFlag bool
 
 	root := &cobra.Command{
-		Use:           "wrap [flags] <program> [arguments...]",
+		Use:           "wrap [-c wrap.config.yaml] [-v | -d] <program> [arguments...]",
 		Short:         "Run a CLI with configured default arguments",
 		Args:          cobra.MinimumNArgs(1),
 		SilenceUsage:  true,
@@ -30,10 +31,18 @@ func NewRootCommand() *cobra.Command {
 			program := args[0]
 			originalArgs := args[1:]
 			resolvedArgs := builder.Build(program, originalArgs, currentConfig)
+			resolvedCommand := strings.Join(append([]string{program}, resolvedArgs...), " ")
+
+			if verboseFlag {
+				_, err := fmt.Fprintln(command.ErrOrStderr(), resolvedCommand)
+
+				if err != nil {
+					return err
+				}
+			}
 
 			if debugFlag {
-				resolvedCommand := append([]string{program}, resolvedArgs...)
-				_, err := fmt.Fprintln(command.OutOrStdout(), strings.Join(resolvedCommand, " "))
+				_, err := fmt.Fprintln(command.OutOrStdout(), resolvedCommand)
 				return err
 			}
 
@@ -41,8 +50,9 @@ func NewRootCommand() *cobra.Command {
 		},
 	}
 
-	root.Flags().StringVarP(&configFlag, "config", "c", "", "configuration file")
-	root.Flags().BoolVarP(&debugFlag, "debug", "d", false, "print the resolved command without running it")
+	root.Flags().StringVarP(&configFlag, "config", "c", "", "sets configuration file path")
+	root.Flags().BoolVarP(&verboseFlag, "verbose", "v", false, "outputs more verbose logs")
+	root.Flags().BoolVarP(&debugFlag, "debug", "d", false, "prints resolved command without executing")
 	root.Flags().SetInterspersed(false)
 
 	return root
